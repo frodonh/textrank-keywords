@@ -84,30 +84,12 @@ tuple<wstring,Pos,wstring,Node*> lookup_word(const wstring &w,const Dictionary &
 		break;
 	}
 	if (!has_char) return make_tuple(w,Pos::STOP,L"",nullptr);
-	auto it=dic.find(w);
-	if (it!=dic.end()) {
-		bool stop=true;
-		for (const auto &entry:it->second) {
-			if (entry.first!=Pos::STOP) {
-				stop=false;
-				if (entry.second!=L"") return make_tuple(w,entry.first,entry.second,nullptr);
-			}
-		}
-		if (stop) return make_tuple(w,Pos::STOP,L"",nullptr);
-	}
+	auto it=dic.lookup(w);
+	if (it!=dic.cend()) return make_tuple(w,it->pos,(it->pos==Pos::STOP)?L"":it->lemma,nullptr);
 	wstring lower;
 	transform(w.begin(),w.end(),back_inserter(lower),[](wchar_t c){return global_facet.tolower(c);});
-	it=dic.find(lower);
-	if (it!=dic.end()) {
-		bool stop=true;
-		for (const auto &entry:it->second) {
-			if (entry.first!=Pos::STOP) {
-				stop=false;
-				if (entry.second!=L"") return make_tuple(w,entry.first,entry.second,nullptr);
-			}
-		}
-		if (stop) return make_tuple(w,Pos::STOP,L"",nullptr);;
-	}
+	it=dic.lookup(lower);
+	if (it!=dic.cend()) return make_tuple(w,it->pos,(it->pos==Pos::STOP)?L"":it->lemma,nullptr);
 	return make_tuple(w,Pos::UNKNOWN,w,nullptr);
 }
 

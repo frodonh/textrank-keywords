@@ -22,13 +22,7 @@
 #include <codecvt>
 #include <iostream>
 #include <fstream>
-#include <array>
 #include <string>
-#include <vector>
-#include <map>
-#include <iterator>
-#include <memory>
-#include <algorithm>
 #include "dictionary.h"
 #include "graph.h"
 

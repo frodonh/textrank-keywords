@@ -24,6 +24,7 @@
 #include <codecvt>
 #include <fstream>
 #include <utility>
+#include <filesystem>
 #include <limits>
 #include "dictionary.h"
 
@@ -37,27 +38,24 @@ wstring next_token(const wstring &s,wstring::size_type &pos) {
 }
 
 void Dictionary::print(wostream &out) const {
-	for (const auto &[key,l]:*this) {
-		out << key << L'\t' ;
-		for (const auto &ent:l) {
-			out << "(";
-			switch (ent.first) {
-				case Pos::ADJ: out << "ADJ"; break;
-				case Pos::ADV: out << "ADV"; break;
-				case Pos::NOUN: out << "NOUN"; break;
-				case Pos::VER: out << "VER"; break;
-				case Pos::UNKNOWN: out << "UNKNOWN"; break;
-				case Pos::STOP: out << "STOP"; break;
-			}
-			out << "," << ent.second << ") ";
+	for (const auto &it:*this) {
+		out << it.word << L"\t(" ;
+		switch (it.pos) {
+			case Pos::ADJ: out << "ADJ"; break;
+			case Pos::ADV: out << "ADV"; break;
+			case Pos::NOUN: out << "NOUN"; break;
+			case Pos::VER: out << "VER"; break;
+			case Pos::UNKNOWN: out << "UNKNOWN"; break;
+			case Pos::STOP: out << "STOP"; break;
 		}
-		out << endl;
+		out << "," << it.lemma << ") " << endl;
 	}
 }
 
 Dictionary::Dictionary(const string &path) {
 	locale loc("");
 	wifstream ifs(path);
+	reserve(std::filesystem::file_size(path)/15);
 	ifs.imbue(locale(ifs.getloc(),new codecvt_utf8<wchar_t>));
 	wstring word,pos,lemma;
 	wstring line;
@@ -69,10 +67,10 @@ Dictionary::Dictionary(const string &path) {
 		pos=next_token(line,i);
 		lemma=next_token(line,i);
 		Pos p;
-		if (pos==L"NOM") p=Pos::NOUN;
-		else if (pos==L"ADJ") p=Pos::ADJ;
+		if (pos==L"N") p=Pos::NOUN;
+		else if (pos==L"A") p=Pos::ADJ;
 		else if (pos==L"") p=Pos::UNKNOWN;
 		else p=Pos::STOP;
-		(*this)[word].emplace_back(p,lemma);
+		push_back(Entry(word,p,lemma));
 	}
 }
