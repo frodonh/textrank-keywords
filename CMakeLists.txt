@@ -9,8 +9,8 @@ OPTION(VERBOSE_DEBUG "Activate verbose display on standard error to facilitate d
 SET(CMAKE_MODULE_PATH ".")
 
 # General configuration
-SET(CMAKE_C_FLAGS "-Werror -std=c++17 -Waddress -Warray-bounds -Wchar-subscripts -Wimplicit-int -Wimplicit-function-declaration -Wcomment -Wformat -Wmissing-braces -Wnonnull -Wparentheses -Wpointer-sign -Wreorder -Wreturn-type -Wsequence-point -Wsign-compare -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wunused-variable")
-SET(CMAKE_CXX_FLAGS "-Werror -std=c++17 -Waddress -Warray-bounds -Wchar-subscripts -Wcomment -Wformat -Wmissing-braces -Wnonnull -Wparentheses -Wreorder -Wreturn-type -Wsequence-point -Wsign-compare -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wunused-variable")
+SET(CMAKE_C_FLAGS "-Werror -std=c++17 -Waddress -Warray-bounds -Wchar-subscripts -Wimplicit-int -Wimplicit-function-declaration -Wcomment -Wformat -Wnonnull -Wparentheses -Wpointer-sign -Wreorder -Wreturn-type -Wsequence-point -Wsign-compare -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wunused-variable")
+SET(CMAKE_CXX_FLAGS "-Werror -std=c++17 -Waddress -Warray-bounds -Wchar-subscripts -Wcomment -Wformat -Wnonnull -Wparentheses -Wreorder -Wreturn-type -Wsequence-point -Wsign-compare -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wunused-variable")
 SET(CMAKE_CXX_FLAGS_DEBUG
 		"${GCC_DEBUG_FLAGS} -O0 -g -DDEBUG"
 		CACHE STRING "Flags used by the C++ compiler during debug builds."
@@ -52,3 +52,4 @@ endif (DOXYGEN_FOUND)
 
 # Configure target
 ADD_EXECUTABLE(keywords keywords.cpp dictionary.h dictionary.cpp graph.h graph.cpp)
+ADD_EXECUTABLE(prepare prepare.cpp)
