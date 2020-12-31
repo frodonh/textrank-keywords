@@ -48,15 +48,25 @@ class Entry {
 		std::wstring word; 	//!< Original word
 		Pos pos; 	//!< Part-of-speech tag
 		std::wstring lemma; 	//!< Lemma
-		Entry(std::wstring pword,Pos ppos,std::wstring plemma):word(pword),pos(ppos),lemma(plemma) {} 	//!< Construct an entry with its member
+		int32_t ilemma; 	//!< Index of the lemma in the dictionary, or -1 if it does not exist
+		Entry(std::wstring pword,Pos ppos,std::wstring plemma,int32_t pilemma):word(pword),pos(ppos),lemma(plemma),ilemma(pilemma) {} 	//!< Construct an entry with its member
 		Entry()=default; 	//!< Construct an empty entry
 		Entry(const Entry &s)=default; 	//!< Default copy constructor
 		Entry(Entry &&s)=default; 	//!< Default move constructor
+
+		/**
+		 * \brief Print the entry on an output stream
+		 *
+		 * This function may be used for debugging purposes.
+		 * \param out Output stream
+		 */
+		void print(std::wostream &out) const;
 };
 
 inline bool operator<(const std::wstring &a,const Entry &b) {return a<b.word;}
 inline bool operator<(const Entry &a,const std::wstring &b) {return a.word<b;}
 inline bool operator<(const Entry &a,const Entry &b) {return a.word<b.word;}
+inline std::wostream& operator<<(std::wostream &out,const Entry &a) {a.print(out);return out;}
 
 /**
  * \brief Full dictionary
@@ -68,7 +78,11 @@ class Dictionary:public std::vector<Entry> {
 		/**
 		 * \brief Construct a dictionary by reading it from a file
 		 *
-		 * \param path Path name of the file from which the dictionary has to be loaded
+		 * \param path Path name of the file from which the dictionary has to be loaded. For best performance, a binary format is used. The binary dictionary may be generated from a text file using the 'prepare' executable. For each dictionary entry, the binary file has the following bytes:
+		 *   - one byte for the POS tag, either 'N' for noun or 'A' for adjective, or 'S' for non-significant word (verb, adverb, preposition...)
+		 *   - four bytes which make an int32_t value corresponding to the number of the associated lemma entry (starting with 0)
+		 *   - one byte which stands for the length (read as unsigned char) of the word in UTF-8 encoding 
+		 *   - n bytes for the word, n being the number read in the previous step
 		 */
 		explicit Dictionary(const std::string &path);
 

@@ -93,6 +93,30 @@ tuple<wstring,Pos,wstring,Node*> lookup_word(const wstring &w,const Dictionary &
 	return make_tuple(w,Pos::UNKNOWN,w,nullptr);
 }
 
+/**
+ * \brief Return a sentence from an input stream
+ *
+ * A sentence is delimited by either a newline character or a dot. The input stream is read until one of the following conditions is encountered:
+ *   - the EOF bit or the bad bit of the fail bit is set
+ *   - a dot is read ; the dot is not included in the resulting string
+ *   - a newline character is read ; the newline character is not included in the resulting string
+ * \param in Input stream
+ * \return Sentence read from the input stream
+ */
+wstring get_sentence(wistream &in) {
+	wostringstream oss;
+	wchar_t ch;
+	bool stop=false;
+	while (in && !stop) {
+		ch='\0';
+		in.get(ch);
+		if (in.fail() || in.bad() || ch==L'\n' || ch==L'.') {
+			stop=true;
+		} else oss.put(ch);
+	}
+	return oss.str();
+}
+
 /*********************************************
  *                  Node                     *
  *********************************************/
@@ -130,8 +154,7 @@ void Graph::add_edge(const wstring &a,Node &na,const wstring &b,Node &nb) noexce
 Graph::Graph(wistream &ifs,const Dictionary &dic,int window_size) {
 	ifs.imbue(locale(ifs.getloc(),new codecvt_utf8<wchar_t>));
 	while (ifs) {
-		wstring sentence;
-		getline(ifs,sentence,L'.');
+		wstring sentence=get_sentence(ifs);
 		wistringstream iss(sentence);
 		iss.imbue(locale(iss.getloc(),new codecvt_utf8<wchar_t>));
 		iss.imbue(locale(iss.getloc(),new Tokenizer_facet));
@@ -158,25 +181,31 @@ Graph::Graph(wistream &ifs,const Dictionary &dic,int window_size) {
 }
 
 vector<pair<wstring,double>> Graph::text_rank(int num_keywords,int num_iterations,double d) noexcept {
+	// Calculate and store the total weight of edges per node, and initialize scores of nodes to 1
 	for (auto &it:*this) {
 		it.second.score=1.0;
 		it.second._total=accumulate(it.second.edges.begin(),it.second.edges.end(),0,[](const auto &a,const auto &b){return a+b.second;});
 	}
+	// Main loop of the text-rank algorithm. Iterate to evaluate the scores of each node
 	for (int i=0;i<num_iterations;++i) {
 		for (auto &it:*this) it.second._lscore=it.second.score;
 		for (auto &it:*this) {
 			it.second.score=(1-d)+d*accumulate(it.second.edges.begin(),it.second.edges.end(),0.0,[=](const auto &a,const auto &b) {const auto n=find(b.first);if (n!=cend()) return a+b.second*n->second._lscore/n->second._total; else return a;});
 		}
 	}
+	// Store the words and their associated node in the graph in a vector
 	std::vector<std::pair<std::wstring,Node*>> keywords;
 	transform(begin(),end(),back_inserter(keywords),[](auto &a){return make_pair(a.first,&(a.second));});
+	// Partially sort the vector for the first num_keywords terms
 	auto middle=keywords.begin();
 	if (num_keywords>int(keywords.size())) num_keywords=keywords.size();
 	advance(middle,num_keywords);
 	partial_sort(keywords.begin(),middle,keywords.end(),[](const auto &a,const auto &b){return a.second->score>b.second->score;});
+	// Generate a vector with the keywords and their scores
 	for (auto it=keywords.begin();it!=middle;it++) it->second->keyword=true;
 	vector<pair<wstring,double>> res;
 	transform(keywords.begin(),middle,back_inserter(res),[](const auto &a){return make_pair(a.first,a.second->score);});
+	// Go once again through the text to find if two or more consecutive words are keywords. In that case, add a multiple-word keyword to the result vector by merging the keywords and summing up ther scores
 	for (auto &it:_tokens) {
 		auto jt=it.begin();
 		while (jt!=it.end()) {
@@ -194,6 +223,8 @@ vector<pair<wstring,double>> Graph::text_rank(int num_keywords,int num_iteration
 			} else jt++;
 		}
 	}
+	// Sort again with the new multi-word keywords
 	sort(res.begin(),res.end(),[](const auto &a,const auto &b){return a.second>b.second;});
+	// Return the result
 	return res;
 }
