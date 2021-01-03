@@ -47,24 +47,7 @@ struct Tokenizer_facet:ctype<wchar_t> {
 	 * \brief Classification of a character
 	 */
 	bool do_is(mask m,char_type c) const {
-		if ((m & space) && !((c>='A' && c<='Z') || (c>='a' && c<='z') || (c>='0' && c<='9')
-					|| c=='-' 
-					|| c==L'é' || c==L'É' 
-					|| c==L'ê' || c==L'Ê' 
-					|| c==L'è' || c==L'È' 
-					|| c==L'ë' || c==L'Ë' 
-					|| c==L'â' || c==L'Â'
-					|| c==L'à' || c==L'À'
-					|| c==L'î' || c==L'Î'
-					|| c==L'ï' || c==L'Ï'
-					|| c==L'ô' || c==L'Ô'
-					|| c==L'ù' || c==L'Ù'
-					|| c==L'û' || c==L'Û'
-					|| c==L'ü' || c==L'Ü'
-					|| c==L'ç' || c==L'Ç'
-					|| c==L'œ' || c==L'Œ'
-					|| c==L'æ' || c==L'Æ'
-					)) return true;
+		if ((m & space) && (!iswalnum(c) || c==L'-')) return true;
 		return ctype::do_is(m,c);
 	}
 };
@@ -217,7 +200,9 @@ vector<pair<wstring,double>> Graph::text_rank(int num_keywords,int num_iteration
 				if (distance(jt,kt)>1) {
 					wostringstream oss;
 					transform(jt,kt,ostream_iterator<wstring,wchar_t>(oss,L" "),[](const auto &a){return get<2>(a);});
-					res.push_back(make_pair(oss.str(),accumulate(jt,kt,0.0,[](const auto &a,const auto &b) {return a+get<3>(b)->score;})));
+					auto kw=oss.str();
+					kw.erase(kw.end()-1);
+					res.push_back(make_pair(kw,accumulate(jt,kt,0.0,[](const auto &a,const auto &b) {return a+get<3>(b)->score;})));
 				}
 				jt=kt;
 			} else jt++;
@@ -225,6 +210,7 @@ vector<pair<wstring,double>> Graph::text_rank(int num_keywords,int num_iteration
 	}
 	// Sort again with the new multi-word keywords
 	sort(res.begin(),res.end(),[](const auto &a,const auto &b){return a.second>b.second;});
+	res.erase(res.begin()+num_keywords,res.end());
 	// Return the result
 	return res;
 }
