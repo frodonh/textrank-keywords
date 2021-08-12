@@ -202,7 +202,7 @@ vector<pair<wstring,double>> Graph::text_rank(int num_keywords,int num_iteration
 					transform(jt,kt,ostream_iterator<wstring,wchar_t>(oss,L" "),[](const auto &a){return get<2>(a);});
 					auto kw=oss.str();
 					kw.erase(kw.end()-1);
-					res.push_back(make_pair(kw,accumulate(jt,kt,0.0,[](const auto &a,const auto &b) {return a+get<3>(b)->score;})));
+					if (find_if(res.cbegin(),res.cend(),[&kw](const auto &a) {return get<0>(a)==kw;})==res.cend()) res.push_back(make_pair(kw,accumulate(jt,kt,0.0,[](const auto &a,const auto &b) {return a+get<3>(b)->score;})));
 				}
 				jt=kt;
 			} else jt++;
